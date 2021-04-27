@@ -23,10 +23,7 @@ from pydantic import BaseModel, Field
 app = FastAPI()
 
 logger = get_logger()
-face_detector = FaceDetector(
-    face_confidence=0.995,
-    detection_frame_size=(300, 300)
-)
+face_detector = FaceDetector(face_confidence=0.995)
 face_encoder = FaceEncoder()
 face_verifier = FaceVerifier()
 
