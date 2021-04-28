@@ -43,8 +43,7 @@ def face_encoding_func(request_json, response):
         face_rect = face_bboxes[0]
         response["face_rect"] = face_rect
 
-        face_encoding = face_encoder.encode(
-            image[:, :, ::-1], [face_rect])[0]
+        face_encoding = face_encoder.encode(image, [face_rect])[0]
         assert len(face_encoding) == 128, f"Wrong size of face encoding vector {len(face_encoding)}, expected 128"
 
         return face_encoding
