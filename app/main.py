@@ -25,7 +25,7 @@ from data_types import (
 app = FastAPI()
 
 logger = get_logger()
-face_detector = FaceDetector(face_confidence=0.995)
+face_detector = FaceDetector(face_confidence=0.97)
 face_encoder = FaceEncoder()
 face_verifier = FaceVerifier()
 
