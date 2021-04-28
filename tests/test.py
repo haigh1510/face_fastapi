@@ -1,4 +1,5 @@
 import os
+import argparse
 import base64
 from logger import get_logger
 
@@ -9,18 +10,13 @@ import aiohttp
 logger = get_logger()
 
 base_url = "http://127.0.0.1:9876/api/v1"
-faces_directory = "FACES"
 
-same_face_directory = "same_faces"
-different_face_directory = "different_faces"
-
-compare_face_directory = same_face_directory
-# compare_face_directory = different_face_directory
+allowed_extensions = ['.jpg', '.png']
 
 
-async def encode_face_test():
+async def encode_face_test(faces_directory: str):
     try:
-        image_paths = [os.path.join(faces_directory, f) for f in os.listdir(faces_directory) if '.jpg' in f]
+        image_paths = [os.path.join(faces_directory, f) for f in os.listdir(faces_directory) if any([f.endswith(ext) for ext in allowed_extensions])]
         for image_path in image_paths:
             print('Processing image:', image_path)
 
@@ -38,10 +34,13 @@ async def encode_face_test():
         logger.exception('Exception on encode_face_test')
 
 
-async def compare_face_test():
+async def compare_face_test(faces_directory: str):
     try:
         data_to_verify = []
-        image_paths = [os.path.join(compare_face_directory, f) for f in os.listdir(compare_face_directory) if '.jpg' in f]
+        image_paths = [os.path.join(faces_directory, f) for f in os.listdir(faces_directory) if any([f.endswith(ext) for ext in allowed_extensions])]
+
+        assert len(image_paths) == 2, f"Exactly 2 images expected to compare, found {len(image_paths)}"
+
         for image_path in image_paths:
             print('Processing image:', image_path)
 
@@ -56,7 +55,8 @@ async def compare_face_test():
                 response_json = await response.json()
                 print("success:", response_json["success"])
 
-                data_to_verify.append((request["image"], response_json["face_encoding"]))
+                if response_json["success"]:
+                    data_to_verify.append((request["image"], response_json["face_encoding"]))
 
         assert len(data_to_verify) == 2
 
@@ -76,10 +76,17 @@ async def compare_face_test():
         logger.exception('Exception on compare_face_test')
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--detect_faces_path", type=str, required=True,
+                    help="directory with images to test detection")
+parser.add_argument("--compare_faces_path", type=str, required=True,
+                    help="directory with images to test verification")
+args = parser.parse_args()
+
 if __name__ == '__main__':
     tasks = [
-        encode_face_test(),
-        compare_face_test(),
+        encode_face_test(args.detect_faces_path),
+        compare_face_test(args.compare_faces_path),
     ]
     futures = (asyncio.ensure_future(task) for task in tasks)
 
