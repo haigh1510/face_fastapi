@@ -8,7 +8,7 @@ import aiohttp
 
 logger = get_logger()
 
-request_url = "http://127.0.0.1:9876/api/v1"
+base_url = "http://127.0.0.1:9876/api/v1"
 faces_directory = "FACES"
 
 same_face_directory = "same_faces"
@@ -30,7 +30,7 @@ async def encode_face_test():
             image_base64 = base64.b64encode(image_data)
             json_content = {"image": image_base64.decode('utf-8')}
 
-            async with aiohttp.request('POST', request_url + "/encode_face", json=json_content) as response:
+            async with aiohttp.request('POST', base_url + "/encode_face", json=json_content) as response:
                 response.raise_for_status()
                 response_json = await response.json()
                 print('response:', response_json)
@@ -51,7 +51,7 @@ async def compare_face_test():
             image_base64 = base64.b64encode(image_data)
             request = {"image": image_base64.decode('utf-8')}
 
-            async with aiohttp.request('POST', request_url + "/encode_face", json=request) as response:
+            async with aiohttp.request('POST', base_url + "/encode_face", json=request) as response:
                 response.raise_for_status()
                 response_json = await response.json()
                 print("success:", response_json["success"])
@@ -68,7 +68,7 @@ async def compare_face_test():
             "image": verify_face_data[0]
         }
 
-        async with aiohttp.request('POST', request_url + "/compare_faces", json=compare_request) as response:
+        async with aiohttp.request('POST', base_url + "/compare_faces", json=compare_request) as response:
             response.raise_for_status()
             response_json = await response.json()
             print("verify_distance:", response_json["verify_distance"])
