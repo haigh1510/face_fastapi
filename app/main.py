@@ -11,7 +11,6 @@ from facerec_module import (
 )
 
 from fastapi import FastAPI, Request
-from fastapi.encoders import jsonable_encoder
 import uvicorn
 
 import cv2
@@ -35,11 +34,20 @@ class FaceRect(BaseModel):
     bottom: float = Field(description="Relative bottom coordinate of the face bounding box")
 
 
+class EncodeFaceRequest(BaseModel):
+    image: str = Field(description="An image in base64 format")
+
+
 class EncodeFaceResponse(BaseModel):
-    success: bool = False
+    success: bool
     message: str = Field(None, description="message if something has been gone wrong")
     face_rect: FaceRect = Field(None, description="bounding box of the face in format (x, y, width, height)")
     face_encoding: str = Field(None, description="base64 string with face descriptor")
+
+
+class VerifyFaceRequest(BaseModel):
+    image: str = Field(description="An image with a face to verify in base64 format")
+    db_face_encoding: str = Field(description="A face descriptor from database in base64 format")
 
 
 class VerifyFaceResponse(EncodeFaceResponse):
@@ -67,30 +75,14 @@ def face_encoding_func(request_json, response):
     return None
 
 
-""" Request: {
-        "image": <base64_str>
-    }
-
-    Response: {
-        "success": bool,
-        "message": None | str,
-        "face_rect": None | {
-            "left": float,
-            "top": float,
-            "right": float,
-            "bottom": float
-        }
-        "face_encoding": None | <base64_str>
-    }
-"""
-@app.post("/api/v1/encode_face")
-async def encode_face_v1(request: Request):
+@app.post("/api/v1/encode_face", response_model=EncodeFaceResponse)
+async def encode_face_v1(item: EncodeFaceRequest):
     response = {"success": False}
 
     try:
-        request_json = await request.json()
+        request = item.dict()
 
-        face_encoding = face_encoding_func(request_json, response)
+        face_encoding = face_encoding_func(request, response)
         if face_encoding is not None:
             face_base64 = base64.b64encode(face_encoding)
             response["face_encoding"] = face_base64.decode('utf-8')
@@ -99,40 +91,22 @@ async def encode_face_v1(request: Request):
     except Exception as ex:
         logger.exception(f"Exception on encode_face_v1 occured")
 
-    return jsonable_encoder(EncodeFaceResponse(**response))
+    return EncodeFaceResponse(**response)
 
 
-""" Request: {
-        "db_face_encoding": <base64_str>,
-        "image": <base64_str>
-    }
-
-    Response: {
-        "success": bool,
-        "message": None | str,
-        "face_rect": None | {
-            "left": float,
-            "top": float,
-            "right": float,
-            "bottom": float
-        }
-        "face_encoding": None | <base64_str>
-        "verify_distance": None | float
-    }
-"""
-@app.post("/api/v1/compare_faces")
-async def compare_faces_v1(request: Request):
+@app.post("/api/v1/compare_faces", response_model=VerifyFaceResponse)
+async def compare_faces_v1(item: VerifyFaceRequest):
     response = {"success": False}
 
     try:
-        request_json = await request.json()
+        request = item.dict()
 
-        face_encoding = face_encoding_func(request_json, response)
+        face_encoding = face_encoding_func(request, response)
         if face_encoding is not None:
             face_base64 = base64.b64encode(face_encoding)
             response["face_encoding"] = face_base64.decode('utf-8')
 
-            db_face = face_vector_from_base64_string(request_json["db_face_encoding"])
+            db_face = face_vector_from_base64_string(request["db_face_encoding"])
 
             distance = face_verifier.verify([db_face], face_encoding)[0]
             response["verify_distance"] = distance
@@ -141,7 +115,7 @@ async def compare_faces_v1(request: Request):
     except Exception as ex:
         logger.exception(f"Exception on compare_faces_v1 occured")
 
-    return jsonable_encoder(VerifyFaceResponse(**response))
+    return VerifyFaceResponse(**response)
 
 
 if __name__ == '__main__':
