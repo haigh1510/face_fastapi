@@ -1,5 +1,6 @@
 import json
 import base64
+import time
 
 from facerec_module import (
     get_logger,
@@ -18,7 +19,8 @@ import numpy as np
 
 from data_types import (
     EncodeFaceRequest, EncodeFaceResponse,
-    VerifyFaceRequest, VerifyFaceResponse
+    VerifyFaceRequest,
+    VerificationResult, VerifyFaceResponse
 )
 
 
@@ -28,6 +30,12 @@ logger = get_logger()
 face_detector = FaceDetector(face_confidence=0.97)
 face_encoder = FaceEncoder()
 face_verifier = FaceVerifier()
+
+max_distance_to_verify = 0.6
+
+
+def elapsed_seconds(start_tic):
+    return time.time() - start_tic
 
 
 def face_encoding_func(request_json, response):
@@ -52,8 +60,9 @@ def face_encoding_func(request_json, response):
 
 @app.post("/api/v1/encode_face", response_model=EncodeFaceResponse)
 async def encode_face_v1(item: EncodeFaceRequest):
-    response = {"success": False}
+    tic = time.time()
 
+    response = {"success": False}
     try:
         request = item.dict()
 
@@ -64,15 +73,18 @@ async def encode_face_v1(item: EncodeFaceRequest):
 
             response["success"] = True
     except Exception as ex:
-        logger.exception(f"Exception on encode_face_v1 occured")
+        logger.exception(f"Exception on encode_face_v1 occured:", str(ex))
+
+    response["seconds"] = elapsed_seconds(tic)
 
     return EncodeFaceResponse(**response)
 
 
 @app.post("/api/v1/compare_faces", response_model=VerifyFaceResponse)
 async def compare_faces_v1(item: VerifyFaceRequest):
-    response = {"success": False}
+    tic = time.time()
 
+    response = {"success": False}
     try:
         request = item.dict()
 
@@ -84,11 +96,18 @@ async def compare_faces_v1(item: VerifyFaceRequest):
             db_face = face_vector_from_base64_string(request["db_face_encoding"])
 
             distance = face_verifier.verify([db_face], face_encoding)[0]
-            response["verify_distance"] = distance
+            verified = distance < max_distance_to_verify
+
+            response["verification"] = VerificationResult(
+                distance=distance,
+                max_distance_to_verify=max_distance_to_verify,
+                verified=verified).dict()
 
             response["success"] = True
     except Exception as ex:
-        logger.exception(f"Exception on compare_faces_v1 occured")
+        logger.exception(f"Exception on compare_faces_v1 occured:", str(ex))
+
+    response["seconds"] = elapsed_seconds(tic)
 
     return VerifyFaceResponse(**response)
 

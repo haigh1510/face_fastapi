@@ -17,6 +17,7 @@ class EncodeFaceResponse(BaseModel):
     message: str = Field(None, description="message if something has been gone wrong")
     face_rect: FaceRect = Field(None, description="bounding box of the face")
     face_encoding: str = Field(None, description="base64 string with face descriptor")
+    seconds: float = Field(None, description="Seconds elapsed")
 
 
 class VerifyFaceRequest(BaseModel):
@@ -24,5 +25,11 @@ class VerifyFaceRequest(BaseModel):
     db_face_encoding: str = Field(description="A face descriptor from database in base64 format")
 
 
+class VerificationResult(BaseModel):
+    distance: float = Field(description="Euclidean distance between 2 faces")
+    max_distance_to_verify: float = Field(description="Distance threshold to verify 2 faces, lower is more strict")
+    verified: bool = Field(description="Verification result")
+
+
 class VerifyFaceResponse(EncodeFaceResponse):
-    verify_distance: float = Field(None, description="euclidean distance between 2 faces")
+    verification: VerificationResult = Field(None, description="Verification result")

@@ -74,7 +74,8 @@ async def compare_face_test(faces_directory: str):
             async with session.request('POST', base_url + "/compare_faces", json=compare_request) as response:
                 response.raise_for_status()
                 response_json = await response.json()
-                print("verify_distance:", response_json["verify_distance"])
+                print("verification:", response_json["verification"])
+                print("seconds:", response_json["seconds"])
     except aiohttp.ClientError:
         logger.exception('Exception on compare_face_test')
 
