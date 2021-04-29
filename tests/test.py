@@ -17,19 +17,21 @@ allowed_extensions = ['.jpg', '.png']
 async def encode_face_test(faces_directory: str):
     try:
         image_paths = [os.path.join(faces_directory, f) for f in os.listdir(faces_directory) if any([f.endswith(ext) for ext in allowed_extensions])]
-        for image_path in image_paths:
-            print('Processing image:', image_path)
 
-            with open(image_path, "rb") as image:
-                image_data = image.read()
+        async with aiohttp.ClientSession() as session:
+            for image_path in image_paths:
+                print('Processing image:', image_path)
 
-            image_base64 = base64.b64encode(image_data)
-            json_content = {"image": image_base64.decode('utf-8')}
+                with open(image_path, "rb") as image:
+                    image_data = image.read()
 
-            async with aiohttp.request('POST', base_url + "/encode_face", json=json_content) as response:
-                response.raise_for_status()
-                response_json = await response.json()
-                print('response:', response_json)
+                image_base64 = base64.b64encode(image_data)
+                json_content = {"image": image_base64.decode('utf-8')}
+
+                async with session.request('POST', base_url + "/encode_face", json=json_content) as response:
+                    response.raise_for_status()
+                    response_json = await response.json()
+                    print('response:', response_json)
     except aiohttp.ClientError:
         logger.exception('Exception on encode_face_test')
 
@@ -41,37 +43,38 @@ async def compare_face_test(faces_directory: str):
 
         assert len(image_paths) == 2, f"Exactly 2 images expected to compare, found {len(image_paths)}"
 
-        for image_path in image_paths:
-            print('Processing image:', image_path)
+        async with aiohttp.ClientSession() as session:
+            for image_path in image_paths:
+                print('Processing image:', image_path)
 
-            with open(image_path, "rb") as image:
-                image_data = image.read()
+                with open(image_path, "rb") as image:
+                    image_data = image.read()
 
-            image_base64 = base64.b64encode(image_data)
-            request = {"image": image_base64.decode('utf-8')}
+                image_base64 = base64.b64encode(image_data)
+                request = {"image": image_base64.decode('utf-8')}
 
-            async with aiohttp.request('POST', base_url + "/encode_face", json=request) as response:
+                async with session.request('POST', base_url + "/encode_face", json=request) as response:
+                    response.raise_for_status()
+                    response_json = await response.json()
+                    print("success:", response_json["success"])
+
+                    if response_json["success"]:
+                        data_to_verify.append((request["image"], response_json["face_encoding"]))
+
+            assert len(data_to_verify) == 2
+
+            db_face_data = data_to_verify[0]
+            verify_face_data = data_to_verify[1]
+
+            compare_request = {
+                "db_face_encoding": db_face_data[1],
+                "image": verify_face_data[0]
+            }
+
+            async with session.request('POST', base_url + "/compare_faces", json=compare_request) as response:
                 response.raise_for_status()
                 response_json = await response.json()
-                print("success:", response_json["success"])
-
-                if response_json["success"]:
-                    data_to_verify.append((request["image"], response_json["face_encoding"]))
-
-        assert len(data_to_verify) == 2
-
-        db_face_data = data_to_verify[0]
-        verify_face_data = data_to_verify[1]
-
-        compare_request = {
-            "db_face_encoding": db_face_data[1],
-            "image": verify_face_data[0]
-        }
-
-        async with aiohttp.request('POST', base_url + "/compare_faces", json=compare_request) as response:
-            response.raise_for_status()
-            response_json = await response.json()
-            print("verify_distance:", response_json["verify_distance"])
+                print("verify_distance:", response_json["verify_distance"])
     except aiohttp.ClientError:
         logger.exception('Exception on compare_face_test')
 
