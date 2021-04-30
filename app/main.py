@@ -1,33 +1,30 @@
-import json
 import base64
 import time
 
 from facerec_module import (
     get_logger,
     FaceDetector,
-    FaceEncoderDlib,
     face_vector_from_base64_string,
     decode_image_from_base64_string
 )
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 import uvicorn
-
-import cv2
-import numpy as np
 
 from data_types import (
     EncodeFaceRequest, EncodeFaceResponse,
     VerifyFaceRequest,
     VerificationResult, VerifyFaceResponse
 )
+from get_encoder import get_encoder
+from config import init_params
 
 
 app = FastAPI()
 
 logger = get_logger()
-face_detector = FaceDetector(face_confidence=0.97)
-face_encoder = FaceEncoderDlib()
+face_detector = FaceDetector(**init_params["detector"])
+face_encoder = get_encoder(**init_params["encoder"])
 
 max_distance_to_verify = face_encoder.verify_threshold()
 face_encoding_length = face_encoder.encoding_length()
