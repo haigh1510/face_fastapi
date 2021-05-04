@@ -35,8 +35,12 @@ def elapsed_seconds(start_tic):
 
 
 def face_encoding_func(request_json, response):
-    image = decode_image_from_base64_string(request_json["image"])
-    # print("image.shape:", image.shape)
+    try:
+        image = decode_image_from_base64_string(request_json["image"])
+        # print("image.shape:", image.shape)
+    except Exception as ex:
+        response["message"] = str(ex)
+        return None
 
     face_bboxes = face_detector.detect(image)
     if len(face_bboxes) == 0:
