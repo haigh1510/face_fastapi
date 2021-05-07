@@ -29,6 +29,8 @@ face_encoder = get_encoder(**init_params["encoder"])
 max_distance_to_verify = face_encoder.verify_threshold()
 face_encoding_length = face_encoder.encoding_length()
 
+ENCODER_DTYPE = "float32"
+
 
 def elapsed_seconds(start_tic):
     return time.time() - start_tic
@@ -52,6 +54,8 @@ def face_encoding_func(request_json, response):
         response["face_rect"] = face_rect
 
         face_encoding = face_encoder.encode(image, [face_rect])[0]
+        face_encoding = face_encoding.astype(ENCODER_DTYPE)
+
         assert len(face_encoding) == face_encoding_length, \
             f"Wrong size of face encoding vector {len(face_encoding)}, expected {face_encoding_length}"
 
@@ -94,7 +98,7 @@ async def compare_faces_v1(item: VerifyFaceRequest):
             face_base64 = base64.b64encode(face_encoding)
             response["face_encoding"] = face_base64.decode('utf-8')
 
-            db_face = face_vector_from_base64_string(request["db_face_encoding"])
+            db_face = face_vector_from_base64_string(request["db_face_encoding"], dtype=ENCODER_DTYPE)
 
             distance = face_encoder.verify([db_face], face_encoding)[0]
             verified = distance < max_distance_to_verify
