@@ -48,12 +48,10 @@ def elapsed_seconds(start_tic):
 
 
 def face_encoding_func(request_json, response):
-    try:
-        image = decode_image_from_base64_string(request_json["image"])
-        # print("image.shape:", image.shape)
-    except Exception as ex:
-        response["message"] = str(ex)
-        return None
+    image = decode_image_from_base64_string(request_json["image"])
+
+    facerec_assert(image.shape[2] == 3,
+                   f"Unsupported number of image channels: {image.shape[2]}, expected: 3")
 
     face_bboxes = face_detector.detect(image)
 
