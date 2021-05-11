@@ -9,6 +9,7 @@ from facerec_module import (
 )
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from data_types import (
@@ -21,6 +22,15 @@ from config import init_params
 
 
 app = FastAPI()
+
+# https://fastapi.tiangolo.com/tutorial/cors/
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["POST"],
+    allow_headers=["*"],
+)
 
 logger = get_logger()
 face_detector = FaceDetector(**init_params["detector"])
