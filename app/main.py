@@ -1,4 +1,6 @@
+import argparse
 import base64
+import os
 import time
 
 from facerec_module import (
@@ -130,5 +132,17 @@ async def compare_faces_v1(item: VerifyFaceRequest):
     return VerifyFaceResponse(**response)
 
 
+this_dir = os.path.abspath(os.path.dirname(__file__))
+
 if __name__ == '__main__':
-    uvicorn.run(app, host='127.0.0.1', port=9876)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--local", action="store_true", default=False)
+    args = parser.parse_args()
+
+    if args.local:
+        uvicorn.run(app, host='127.0.0.1', port=9876)
+    else:
+        uvicorn.run(app, host="0.0.0.0", port=80,
+                    ssl_keyfile=os.path.join(this_dir, "../key.pem"),
+                    ssl_certfile=os.path.join(this_dir, "../cert.pem")
+        )
