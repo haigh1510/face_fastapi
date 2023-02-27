@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from .jwt import Token
+
 
 class FaceRect(BaseModel):
     left: float = Field(description="Relative left coordinate of the face bounding box")
@@ -14,7 +16,7 @@ class EncodeFaceRequest(BaseModel):
 
 class EncodeFaceResponse(BaseModel):
     success: bool
-    message: str = Field(None, description="message if something has been gone wrong")
+    message: str = Field(None, description="message if something has gone wrong")
     face_rect: FaceRect = Field(None, description="bounding box of the face")
     face_encoding: str = Field(None, description="base64 string with face descriptor")
     seconds: float = Field(None, description="Seconds elapsed")
@@ -33,3 +35,9 @@ class VerificationResult(BaseModel):
 
 class VerifyFaceResponse(EncodeFaceResponse):
     verification: VerificationResult = Field(None, description="Verification result")
+
+
+class TokenResponse(BaseModel):
+    success: bool
+    message: str = Field(None, description="message if something has gone wrong")
+    token: Token = Field(None)

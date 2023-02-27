@@ -9,19 +9,24 @@ from facerec_module import (
     face_vector_from_base64_string,
     decode_image_from_base64_string
 )
-from error import facerec_assert, FacerecError
+from .error import facerec_assert, FacerecError
 
 from fastapi import FastAPI
+from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from data_types import (
+from .data_types import (
     EncodeFaceRequest, EncodeFaceResponse,
     VerifyFaceRequest,
-    VerificationResult, VerifyFaceResponse
+    VerificationResult, VerifyFaceResponse,
+    TokenResponse,
 )
-from get_encoder import get_encoder
-from config import init_params
+
+from .get_encoder import get_encoder
+from .config import init_params
+
+from .jwt import TokenData, get_access_token, validate_token
 
 
 app = FastAPI()
@@ -72,6 +77,7 @@ def face_encoding_func(request_json, response):
 
 
 @app.post("/api/v1/encode_face", response_model=EncodeFaceResponse)
+# @app.post("/api/v1/encode_face", response_model=EncodeFaceResponse, dependencies=[Depends(validate_token)])
 async def encode_face_v1(item: EncodeFaceRequest):
     tic = time.time()
 
@@ -96,6 +102,7 @@ async def encode_face_v1(item: EncodeFaceRequest):
 
 
 @app.post("/api/v1/compare_faces", response_model=VerifyFaceResponse)
+# @app.post("/api/v1/compare_faces", response_model=VerifyFaceResponse, dependencies=[Depends(validate_token)])
 async def compare_faces_v1(item: VerifyFaceRequest):
     tic = time.time()
 
@@ -132,17 +139,19 @@ async def compare_faces_v1(item: VerifyFaceRequest):
     return VerifyFaceResponse(**response)
 
 
-this_dir = os.path.abspath(os.path.dirname(__file__))
+@app.post("/api/v1/token", response_model=TokenResponse)
+async def get_token_v1(item: TokenData):
+    response = {"success": False}
+    try:
+        request = item.dict()
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--local", action="store_true", default=False)
-    args = parser.parse_args()
+        user_id = request["user_id"]
+        # TODO validate user_id
 
-    if args.local:
-        uvicorn.run(app, host='127.0.0.1', port=9876)
-    else:
-        uvicorn.run(app, host="0.0.0.0", port=80,
-                    ssl_keyfile=os.path.join(this_dir, "../key.pem"),
-                    ssl_certfile=os.path.join(this_dir, "../cert.pem")
-        )
+        response["token"] = get_access_token(user_id)
+
+        response["success"] = True
+    except Exception as ex:
+        logger.exception(f"Exception on token occured:", str(ex))
+
+    return TokenResponse(**response)
