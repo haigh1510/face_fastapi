@@ -1,9 +1,17 @@
+# FaceFastAPI
+
+Simple FastAPI based service for faces comparison
+
+
 ## Build docker image and run container
 
 ```
 docker build -t facerec:latest .
 docker run -d -p 80:80 -v $PWD/app:/facerec/app facerec:latest
 ```
+
+## Documentation
+FastAPI auto-generated docs should be available at http://127.0.0.1/docs after docker container started
 
 ## Run tests
 
