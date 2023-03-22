@@ -6,8 +6,7 @@ Simple FastAPI based service for faces comparison
 ## Build docker image and run container
 
 ```
-docker build -t facerec:latest .
-docker run -d -p 80:80 -v $PWD/app:/facerec/app facerec:latest
+docker-compose -f ./docker-compose.yml up --build -d
 ```
 
 ## Documentation
