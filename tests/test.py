@@ -63,16 +63,20 @@ async def compare_face_test(faces_directory: str, base_url: str, headers=None):
                     print("success:", response_json["success"])
 
                     if response_json["success"]:
-                        data_to_verify.append((request["image"], response_json["face_encoding"]))
+                        data_to_verify.append(
+                            {
+                                "image": request["image"],
+                                "face_encoding": response_json["face_encoding"]
+                            }
+                        )
 
-            assert len(data_to_verify) == 2
+            assert len(data_to_verify) == 2, f"Exactly 2 elements expected (gallery and query), found {len(data_to_verify)}"
 
-            db_face_data = data_to_verify[0]
-            verify_face_data = data_to_verify[1]
+            gallery, query = data_to_verify
 
             compare_request = {
-                "db_face_encoding": db_face_data[1],
-                "image": verify_face_data[0]
+                "db_face_encoding": gallery["face_encoding"],  # gallery encoded face
+                "image": query["image"]                        # query image
             }
 
             async with session.request('POST', base_url + "/compare_faces",
