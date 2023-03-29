@@ -41,7 +41,9 @@ async def encode_face_test(faces_directory: str, base_url: str, headers=None):
 
 
 @pytest.mark.skip()
-async def compare_face_test(faces_directory: str, base_url: str, headers=None):
+async def _compare_face(faces_directory: str, base_url: str, headers=None):
+    verified = False
+
     try:
         data_to_verify = []
         image_paths = [os.path.join(faces_directory, f) for f in os.listdir(faces_directory) if any([f.endswith(ext) for ext in allowed_extensions])]
@@ -92,8 +94,24 @@ async def compare_face_test(faces_directory: str, base_url: str, headers=None):
                     print('message:', response_json["message"])
                 print("verification:", response_json["verification"])
                 print("seconds:", response_json["seconds"])
+
+                verified = response_json["verification"]["verified"]
     except aiohttp.ClientError:
         logger.exception('Exception on compare_face_test')
+
+    return verified
+
+
+@pytest.mark.skip()
+async def compare_face_match(faces_directory: str, base_url: str, headers=None):
+    verified = await _compare_face(faces_directory, base_url, headers)
+    assert verified
+
+
+@pytest.mark.skip()
+async def compare_face_mismatch(faces_directory: str, base_url: str, headers=None):
+    verified = await _compare_face(faces_directory, base_url, headers)
+    assert not verified
 
 
 @pytest.fixture
@@ -135,12 +153,10 @@ async def test_api(get_token):
 
     basepath = os.path.dirname(__file__)
 
-    print(basepath)
-
     tasks = [
         encode_face_test(os.path.join(basepath, "./faces/"), base_url, headers),
-        compare_face_test(os.path.join(basepath, "./matched_faces/"), base_url, headers),
-        compare_face_test(os.path.join(basepath, "./non_matched_faces/"), base_url, headers)
+        compare_face_match(os.path.join(basepath, "./matched_faces/"), base_url, headers),
+        compare_face_mismatch(os.path.join(basepath, "./non_matched_faces/"), base_url, headers)
     ]
     for task in asyncio.as_completed(tasks):
         try:
