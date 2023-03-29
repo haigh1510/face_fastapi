@@ -16,10 +16,10 @@ jobs:
     - name: Start docker containers
       run: |
         docker-compose -f ./docker-compose.yml up --build -d
-    - name: Install dependencies
+    - name: Install tests requirements
       run: |
         python -m pip install --upgrade pip
-        pip install aiohttp==3.8.4 pytest pytest-asyncio
+        pip install -r ./tests/requirements.txt
     - name: Run Tests
       run: |
         pytest -s ./tests
