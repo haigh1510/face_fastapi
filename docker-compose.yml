@@ -2,9 +2,9 @@ version: "3.9"
 
 services:
   facerec:
-    build: .
+    build:
+      context: .
     ports:
       - "80:80"
     volumes:
       - "./app:/facerec/app"
-    command: uvicorn app.main:app --host 0.0.0.0 --port 80
