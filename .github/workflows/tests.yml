@@ -10,7 +10,9 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    container:
+      image: python:3.9.10-slim
     steps:
     - uses: actions/checkout@v3
     - name: Start docker containers
