@@ -1,6 +1,5 @@
 import argparse
 import base64
-import numpy as np
 import time
 from typing import Tuple
 
@@ -8,12 +7,7 @@ from fastapi import FastAPI
 from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
 
-from facerec_module import (
-    get_logger,
-    FaceDetector,
-    face_vector_from_base64_string,
-    decode_image_from_base64_string
-)
+from facerec_module import get_logger
 
 from .schemas import (
     EncodeFaceRequest,
@@ -29,7 +23,6 @@ from .utils import (
     face_encoding_func,
     face_verify_func,
     elapsed_seconds,
-    ENCODER_DTYPE,
     FacerecError,
 )
 
@@ -55,7 +48,7 @@ async def encode_face_v1(item: EncodeFaceRequest):
     tic = time.time()
 
     try:
-        face_data = face_encoding_func(item)
+        face_data = face_encoding_func(item.image)
 
         return EncodeFaceResponse(
             face_rect=face_data[0],
@@ -79,16 +72,7 @@ async def compare_faces_v1(item: VerifyFaceRequest):
     tic = time.time()
 
     try:
-        face_encoding = face_encoding_func(item)[1]
-
-        db_face = face_vector_from_base64_string(item.db_face_encoding, dtype=ENCODER_DTYPE)
-
-        if (len(db_face) != len(face_encoding)):
-            raise FacerecError(
-                f"Incorrect size of db_face: {len(db_face)}, expected: {len(face_encoding)}"
-            )
-
-        verification_result = face_verify_func(db_face, face_encoding)
+        verification_result = face_verify_func(item)
 
         return VerifyFaceResponse(
             success=True,

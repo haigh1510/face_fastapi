@@ -6,12 +6,14 @@ from typing import Tuple
 
 from facerec_module import (
     FaceDetector,
-    decode_image_from_base64_string
+    decode_image_from_base64_string,
+    face_vector_from_base64_string
 )
 
 from ..schemas import (
     FaceRect,
     EncodeFaceRequest,
+    VerifyFaceRequest,
     VerificationResult
 )
 
@@ -39,8 +41,8 @@ def elapsed_seconds(start_tic):
     return time.time() - start_tic
 
 
-def face_encoding_func(request: EncodeFaceRequest) -> Tuple[FaceRect, np.array]:
-    image = decode_image_from_base64_string(request.image)
+def face_encoding_func(image_base64: str) -> Tuple[FaceRect, np.array]:
+    image = decode_image_from_base64_string(image_base64)
 
     facerec_assert(image.shape[2] == 3,
                    f"Unsupported number of image channels: {image.shape[2]}, expected: 3")
@@ -61,7 +63,18 @@ def face_encoding_func(request: EncodeFaceRequest) -> Tuple[FaceRect, np.array]:
     return (face_rect, face_encoding)
 
 
-def face_verify_func(db_face: np.array, face_encoding: np.array) -> VerificationResult:
+def face_verify_func(item: VerifyFaceRequest) -> VerificationResult:
+    face_encoding = face_encoding_func(item.image)[1]
+
+    db_face = face_vector_from_base64_string(
+        item.db_face_encoding,
+        dtype=ENCODER_DTYPE
+    )
+
+    facerec_assert(len(db_face) == len(face_encoding),
+                   f"Incorrect size of db_face: {len(db_face)}, \
+                    expected: {len(face_encoding)}")
+
     distance = face_encoder.verify([db_face], face_encoding)[0]
 
     return VerificationResult(
