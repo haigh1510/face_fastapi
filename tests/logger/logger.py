@@ -2,7 +2,7 @@ import logging
 
 
 def get_logger():
-    logger_name = 'AILAB_FACE_FASTAPI_LOGGER'
+    logger_name = 'FACE_FASTAPI_LOGGER'
 
     if logger_name in logging.Logger.manager.loggerDict.keys():
         return logging.getLogger(logger_name)

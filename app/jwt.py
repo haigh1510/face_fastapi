@@ -1,22 +1,14 @@
 from datetime import datetime, timedelta
 
-from pydantic import BaseModel
 from fastapi import Header, HTTPException, status
 from jose import jwt, JWTError
+
+from .schemas import Token, TokenData
 
 
 JWT_SECRET_KEY = "f580913fa68903c93a507c42e0136c1408e7700af9735165e87767aa5412beb9"
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 10
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    user_id: str
 
 
 def get_access_token(user_id: str) -> Token:
