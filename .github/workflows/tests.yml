@@ -10,17 +10,11 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container:
       image: python:3.9.10-slim
     steps:
     - uses: actions/checkout@v3
-    - name: Install Docker
-      run: |
-        apt-get update
-        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-    - name: Start Docker Service
-      run: service docker start
     - name: Start docker containers
       run: |
         docker compose -f ./docker-compose.yml up --build -d
