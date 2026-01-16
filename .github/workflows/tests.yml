@@ -15,6 +15,12 @@ jobs:
       image: python:3.9.10-slim
     steps:
     - uses: actions/checkout@v3
+    - name: Install Docker
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    - name: Start Docker Service
+      run: sudo service docker start
     - name: Start docker containers
       run: |
         docker compose -f ./docker-compose.yml up --build -d
