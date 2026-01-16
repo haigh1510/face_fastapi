@@ -3,5 +3,3 @@ from .face_enconding import (
     face_encoding_func,
     face_verify_func
 )
-
-from .error import FacerecError

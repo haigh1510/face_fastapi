@@ -22,8 +22,7 @@ from .schemas import (
 from .utils import (
     face_encoding_func,
     face_verify_func,
-    elapsed_seconds,
-    FacerecError,
+    elapsed_seconds
 )
 
 from .jwt import get_access_token, validate_token
@@ -56,7 +55,7 @@ async def encode_face_v1(item: EncodeFaceRequest):
             success=True,
             seconds=elapsed_seconds(tic)
         )
-    except FacerecError as ex:
+    except Exception as ex:
         logger.exception(f"Exception on encode_face_v1 occured:", str(ex))
 
         return EncodeFaceResponse(
@@ -79,7 +78,7 @@ async def compare_faces_v1(item: VerifyFaceRequest):
             verification=verification_result,
             seconds=elapsed_seconds(tic)
         )
-    except FacerecError as ex:
+    except Exception as ex:
         logger.exception(f"Exception on compare_faces_v1 occured:", str(ex))
 
         return VerifyFaceResponse(
