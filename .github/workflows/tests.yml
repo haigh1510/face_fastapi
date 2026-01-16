@@ -10,16 +10,13 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.9.12
     - name: Start docker containers
       run: |
-        docker compose -f ./docker-compose.yml up --build -d
+        docker compose -f ./docker-compose.yml build --build-arg PYTHON_VERSION=3.9.10
+        docker compose up -d
     - name: Install tests requirements
       run: |
         python -m pip install --upgrade pip
