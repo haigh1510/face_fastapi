@@ -148,7 +148,7 @@ async def test_api(get_token):
     assert token is not None
 
     headers = {
-        'token': token,
+        "Authorization": f"Bearer {token}"
     }
 
     basepath = os.path.dirname(__file__)
