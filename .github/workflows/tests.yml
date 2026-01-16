@@ -15,8 +15,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Start docker containers
       run: |
-        docker compose -f ./docker-compose.yml build --build-arg PYTHON_VERSION=3.9.10
-        docker compose up -d
+        docker compose -f ./docker-compose.yml up --build -d
     - name: Install tests requirements
       run: |
         python -m pip install --upgrade pip

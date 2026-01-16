@@ -4,7 +4,7 @@
 # If you need more help, visit the Dockerfile reference guide at
 # https://docs.docker.com/go/dockerfile-reference/
 
-ARG PYTHON_VERSION=3.9.5
+ARG PYTHON_VERSION=3.9.10
 FROM python:${PYTHON_VERSION}-slim as base
 
 # Prevents Python from writing pyc files.
@@ -55,4 +55,4 @@ USER appuser
 EXPOSE 80
 
 # Run the application.
-CMD uvicorn 'app.main:app' --host=0.0.0.0 --port=80
+CMD ["uvicorn", "app.main:app", "--host=0.0.0.0", "--port=80"]
